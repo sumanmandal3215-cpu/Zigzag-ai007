@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FX CASINO - Premium Trading Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #080b10; color: #ffffff; font-family: 'Segoe UI', Roboto, sans-serif; }
+        .glossy-panel { background: linear-gradient(145deg, #121722, #0d1118); border: 1px solid #1f2633; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5); }
+        .neon-green-text { text-shadow: 0 0 8px #00ff88; color: #00ff88; }
+        .neon-red-text { text-shadow: 0 0 8px #ff3333; color: #ff3333; }
+        .gold-gradient-btn { background: linear-gradient(180deg, #ffd700, #c59b27); color: #000; font-weight: 800; }
+        .disabled-btn { opacity: 0.4; cursor: not-allowed !important; pointer-events: none; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-start p-2 sm:p-4 md:p-6 bg-[#080b10]">
+
+    <!-- ================= AUTHENTICATION OVERLAY (LOGIN / SIGNUP) ================= -->
+    <div id="auth-overlay" class="fixed inset-0 bg-[#080b10] flex items-center justify-center p-4 z-50 hidden">
+        <div class="glossy-panel w-full max-w-sm rounded-2xl p-6 border border-gray-800 text-center">
+            <h2 class="text-2xl font-black tracking-wider text-white mb-2">FX <span class="text-yellow-500">CASINO</span></h2>
+            <p id="auth-title" class="text-sm text-gray-400 mb-6 font-semibold uppercase tracking-wider">Account Authentication</p>
+            
+            <div class="flex flex-col gap-3 mb-4">
+                <div class="relative">
+                    <i class="fa-solid fa-envelope absolute left-3 top-3.5 text-gray-500 text-sm"></i>
+                    <input type="email" id="auth-email" placeholder="Email Address" class="bg-[#080b10] border border-gray-800 text-white rounded-xl pl-10 pr-4 py-3 text-sm font-bold focus:outline-none w-full placeholder-gray-600">
+                </div>
+                <div class="relative">
+                    <i class="fa-solid fa-lock absolute left-3 top-3.5 text-gray-500 text-sm"></i>
+                    <input type="password" id="auth-password" placeholder="Password" class="bg-[#080b10] border border-gray-800 text-white rounded-xl pl-10 pr-4 py-3 text-sm font-bold focus:outline-none w-full placeholder-gray-600">
+                </div>
+            </div>
+
+            <button onclick="handleAuthAction()" id="auth-submit-btn" class="w-full gold-gradient-btn text-black font-black py-3 rounded-xl uppercase tracking-widest text-xs mb-4 transition active:scale-95 shadow-lg shadow-yellow-600/10">Sign In</button>
+            
+            <p class="text-xs text-gray-400">
+                <span id="auth-toggle-text">Don't have an account?</span> 
+                <button onclick="toggleAuthMode()" id="auth-toggle-btn" class="text-yellow-500 font-bold underline ml-1">Sign Up</button>
+            </p>
+        </div>
+    </div>
+
+    <!-- ================= ACTIVATION / PASSWORD MODAL ================= -->
+    <div id="activation-modal" class="fixed inset-0 bg-black/85 flex items-center justify-center p-4 z-50 hidden backdrop-blur-sm">
+        <div class="glossy-panel w-full max-w-sm rounded-2xl p-6 border border-yellow-600/30 text-center">
+            <i class="fa-solid fa-key text-3xl text-yellow-500 mb-2 animate-bounce"></i>
+            <h3 class="text-base font-black text-white uppercase tracking-wider mb-1">Verify Deposit & Unlock</h3>
+            <p class="text-xs text-gray-400 mb-4">Please enter the Secure Activation Passcode provided by the Administrator after your deposit confirmation.</p>
+            <input type="password" id="activation-code-input" placeholder="Enter Secret Code" class="bg-[#080b10] border border-gray-800 text-white rounded-xl p-3 text-xs font-bold focus:outline-none w-full text-center placeholder-gray-700 tracking-widest mb-4">
+            <div class="flex gap-2">
+                <button onclick="verifyActivationCode()" class="flex-1 bg-gradient-to-r from-green-600 to-emerald-500 text-white font-bold py-2.5 rounded-xl uppercase tracking-wider text-xs transition active:scale-95">Verify</button>
+                <button onclick="dismissModalView('activation-modal')" class="bg-gray-800 text-gray-400 font-bold px-4 rounded-xl text-xs uppercase tracking-wider">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MAIN APP DASHBOARD ================= -->
+    <div id="main-dashboard" class="w-full max-w-6xl flex flex-col gap-4 hidden">
+        
+        <!-- TRC20 Deposit Header Alert Top Bar -->
+        <div class="w-full bg-gradient-to-r from-blue-950 to-slate-900 border border-blue-500/20 rounded-2xl p-3 flex flex-col sm:flex-row justify-between items-center gap-2">
+            <div class="flex items-center gap-2">
+                <i class="fa-brands fa-ethereum text-blue-400 text-lg"></i>
+                <span class="text-xs font-black uppercase tracking-wider text-gray-300">Official TRC20 Deposit Address:</span>
+                <span id="crypto-address-text" class="text-xs text-yellow-400 font-mono font-bold tracking-wide break-all selection:bg-yellow-500 selection:text-black">TY7R6xPqWvZsBM97KmLAuCq183NksE99XX</span>
+            </div>
+            <div class="flex gap-2 w-full sm:w-auto justify-end">
+                <button onclick="copyTRC20Address()" class="bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 border border-blue-500/30 px-3 py-1 rounded-xl text-xs font-bold transition flex items-center gap-1"><i class="fa-solid fa-copy"></i> Copy</button>
+                <button id="activation-trigger-btn" onclick="triggerModalView('activation-modal')" class="bg-gradient-to-r from-yellow-600 to-yellow-500 text-black px-3 py-1 rounded-xl text-xs font-black uppercase tracking-wider transition active:scale-95"><i class="fa-solid fa-unlock"></i> Unlock Trading</button>
+            </div>
+        </div>
+
+        <!-- Header Controls -->
+        <div class="w-full flex flex-col sm:flex-row justify-between items-center gap-3 glossy-panel rounded-2xl p-4">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-chart-line text-2xl text-yellow-500"></i>
+                <h1 class="text-2xl font-black tracking-wider text-white">FX <span class="text-yellow-500">CASINO</span></h1>
+            </div>
+            
+            <div class="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+                <div class="flex items-center bg-[#080b10] border border-gray-800 rounded-xl px-3 py-2">
+                    <select id="market-select" class="bg-transparent text-white font-bold text-sm focus:outline-none cursor-pointer" onchange="changeActiveMarket()">
+                        <option value="FX:EURUSD">🇪🇺🇺🇸 EUR/USD</option>
+                        <option value="FX:GBPUSD">🇬🇧🇺🇸 GBP/USD</option>
+                        <option value="FX:USDJPY">🇺🇸🇯🇵 USD/JPY</option>
+                        <option value="FX:AUDUSD">🇦🇺🇺🇸 AUD/USD</option>
+                    </select>
+                </div>
+
+                <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-xl px-4 py-1.5 flex items-center gap-2">
+                    <i class="fa-solid fa-wallet text-yellow-500 text-sm"></i>
+                    <div class="text-right">
+                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest leading-none">Wallet Balance</p>
+                        <p id="main-balance" class="text-lg font-black text-yellow-400 mt-0.5">₹10,000.00</p>
+                    </div>
+                </div>
+
+                <button onclick="logoutUser()" class="text-red-500 hover:text-red-400 text-sm p-2" title="Sign Out"><i class="fa-solid fa-right-from-bracket"></i></button>
+            </div>
+        </div>
+
+        <!-- Dashboard Workspace Grid Matrix -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 w-full">
+            <!-- Chart Workspace & Small Display Box Counters -->
+            <div class="lg:col-span-2 flex flex-col gap-4">
+                <div class="w-full glossy-panel rounded-2xl overflow-hidden relative" style="height: 400px;">
+                    <div id="tradingview_chart" class="h-full w-full"></div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="glossy-panel rounded-xl p-4 flex items-center justify-between border-b-4 border-green-500">
+                        <div>
+                            <p class="text-xs text-gray-400 font-bold uppercase">Total Profit</p>
+                            <p id="profit-box" class="text-xl font-black text-green-400 mt-1">₹0.00</p>
+                        </div>
+                    </div>
+                    <div class="glossy-panel rounded-xl p-4 flex items-center justify-between border-b-4 border-red-500">
+                        <div>
+                            <p class="text-xs text-gray-400 font-bold uppercase">Total Loss</p>
+                            <p id="loss-box" class="text-xl font-black text-red-400 mt-1">₹0.00</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configuration & Input Controls Panel (Accessible, but execution buttons are conditioned) -->
+            <div class="flex flex-col gap-4">
+                <div class="w-full glossy-panel rounded-2xl p-5 flex flex-col gap-4">
+                    <div>
+                        <p class="text-center text-xs font-black tracking-widest text-gray-400 uppercase mb-2">Stake Amount (Min ₹100)</p>
+                        <div class="flex items-center justify-between bg-[#080b10] rounded-xl p-1.5 border border-gray-800">
+                            <button onclick="adjustStake(-50)" class="gold-gradient-btn rounded-lg px-4 py-2 text-xs">MIN</button>
+                            <input type="number" id="stake-amount" value="100" min="100" class="bg-transparent text-center text-xl font-black text-white w-24 focus:outline-none">
+                            <button onclick="adjustStake(50)" class="gold-gradient-btn rounded-lg px-4 py-2 text-xs">MAX</button>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between bg-[#080b10] p-3 rounded-xl border border-gray-800/60">
+                        <label class="text-xs font-bold text-gray-400 uppercase">Expiry Timer:</label>
+                        <select id="trade-timer" class="bg-transparent text-white font-bold text-sm focus:outline-none cursor-pointer">
+                            <option value="5">5 Seconds</option>
+                            <option value="10">10 Seconds</option>
+                            <option value="30">30 Seconds</option>
+                        </select>
+                    </div>
+
+                    <!-- Buy / Sell Action Execution Gateways -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <button id="buy-btn" onclick="executeMarketOrder('BUY')" class="disabled-btn bg-gradient-to-r from-emerald-600 to-green-500 text-white font-black py-4 rounded-xl text-lg uppercase transition shadow-lg">BUY</button>
+                        <button id="sell-btn" onclick="executeMarketOrder('SELL')" class="disabled-btn bg-gradient-to-r from-rose-600 to-red-500 text-white font-black py-4 rounded-xl text-lg uppercase transition shadow-lg">SELL</button>
+                    </div>
+                    
+                    <!-- Notice Warning message shown underneath locked parameters -->
+                    <p id="lock-warning-msg" class="text-[10px] text-center text-red-400 font-bold uppercase tracking-wider animate-pulse"><i class="fa-solid fa-lock"></i> Trading Locked! Complete Deposit to Unlock</p>
+                </div>
+
+                <div id="live-trade-status" class="w-full glossy-panel rounded-xl p-3 text-center border border-yellow-500/40 hidden text-yellow-400 text-xs font-bold"></div>
+
+                <div class="w-full glossy-panel rounded-2xl p-4 flex flex-col flex-1 min-h-[110px]">
+                    <div id="history-list" class="flex-1 overflow-y-auto flex flex-col gap-2 text-xs max-h-[100px]">
+                        <p class="text-gray-600 text-center py-2">No closed records found.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Universal Action Tabs Navigation Interface Footer Components -->
+        <div class="w-full glossy-panel rounded-xl p-2.5 grid grid-cols-2 gap-2 text-center text-xs font-black uppercase tracking-widest text-gray-400">
+            <button onclick="triggerModalView('deposit-modal')" class="py-2 hover:text-white transition flex items-center justify-center gap-2 bg-green-500/5 rounded-lg border border-green-500/10"><i class="fa-solid fa-circle-plus text-green-400 text-base"></i> Deposit</button>
+            <button onclick="triggerModalView('withdraw-modal')" class="py-2 hover:text-white transition flex items-center justify-center gap-2 bg-yellow-500/5 rounded-lg border border-yellow-500/10"><i class="fa-solid fa-building-columns text-yellow-400 text-base"></i> Withdraw</button>
+        </div>
+    </div>
+
+    <!-- Support Modals Structs Container Layouts -->
+    <div id="deposit-modal" class="fixed inset-0 bg-black/85 flex items-center justify-center p-4 hidden z-50 backdrop-blur-sm">
+        <div class="glossy-panel w-full max-w-sm rounded-2xl p-6 text-center border border-gray-800">
+            <h3 class="text-base font-black text-yellow-400 uppercase tracking-wider mb-2">Manual Deposit System</h3>
+            <p class="text-xs text-gray-400 leading-relaxed mb-4">Transfer TRC20 USDT funds to the top address and send the tx confirmation hash/screenshot to the verified admin:</p>
+            <a href="https://t.me/YOUR_TELEGRAM_USERNAME" target="_blank" class="block w-full bg-blue-600 hover:bg-blue-500 text-center text-white font-bold py-3 rounded-xl mb-4 transition uppercase text-xs">@YOUR_TELEGRAM_USERNAME</a>
+            <button onclick="dismissModalView('deposit-modal')" class="w-full bg-gray-800 text-gray-400 font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider">Close View</button>
+        </div>
+    </div>
+
+    <div id="withdraw-modal" class="fixed inset-0 bg-black/85 flex items-center justify-center p-4 hidden z-50 backdrop-blur-sm">
+        <div class="glossy-panel w-full max-w-sm rounded-2xl p-6 border border-gray-800">
+            <h3 class="text-base font-black text-yellow-400 uppercase tracking-wider mb-3">Secure UPI Payout</h3>
+            <div class="flex flex-col gap-3 mb-4">
+                <input type="number" id="withdraw-amount" placeholder="Enter Payout Amount (₹)" class="bg-[#080b10] border border-gray-800 text-white rounded-xl p-3 text-xs font-bold focus:outline-none w-full">
+                <input type="text" id="withdraw-upi" placeholder="Enter Destination UPI ID" class="bg-[#080b10] border border-gray-800 text-white rounded-xl p-3 text-xs font-bold focus:outline-none w-full">
+            </div>
+            <button onclick="processPayoutRequest()" class="w-full bg-gradient-to-r from-yellow-600 to-yellow-500 text-black font-black py-3 rounded-xl uppercase tracking-widest text-xs mb-2 transition">Authorize Payout</button>
+            <button onclick="dismissModalView('withdraw-modal')" class="w-full bg-gray-800 text-gray-400 font-bold py-2.5 rounded-xl text-xs uppercase tracking-wider">Cancel</button>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
+    <script>
+        let isSignUpMode = false;
+        let currentUser = null;
+        let walletBalance = 10000;
+        let runningProfit = 0;
+        let runningLoss = 0;
+        let isTradingUnlocked = false;
+        
+        // SECURE SYSTEM ENGINES CONSTANTS DEFINED BY MASTER ADMIN
+        const MASTER_PASSCODE = "ADMIN99X";
+        const TELEGRAM_HANDLE = "YOUR_TELEGRAM_USERNAME";
+
+        // Auto-Login Validation Routine Core Checklist on Bootstrap Runtime
+        window.addEventListener('DOMContentLoaded', () => {
+            const rememberedUser = localStorage.getItem('active_session_token');
+            if(rememberedUser) {
+                bootstrapUserSession(rememberedUser);
+            } else {
+                document.getElementById('auth-overlay').classList.remove('hidden');
+            }
+        });
+
+        function bootstrapUserSession(email) {
+            let savedUserData = localStorage.getItem(`user_${email}`);
+            if(savedUserData) {
+                let parsedData = JSON.parse(savedUserData);
+                currentUser = email;
+                walletBalance = parsedData.balance;
+                runningProfit = parsedData.profit;
+                runningLoss = parsedData.loss;
+                isTradingUnlocked = parsedData.tradingUnlocked || false;
+
+                document.getElementById('auth-overlay').classList.add('hidden');
+                document.getElementById('main-dashboard').classList.remove('hidden');
+                initializeTradingViewChart("FX:EURUSD");
+                refreshLedgerUI();
+                syncTradingLockState();
+            }
+        }
+
+        // Synchronize Trading UI Components based on current Activation states
+        function syncTradingLockState() {
+            const buyBtn = document.getElementById('buy-btn');
+            const sellBtn = document.getElementById('sell-btn');
+            const warningMsg = document.getElementById('lock-warning-msg');
+            const triggerBtn = document.getElementById('activation-trigger-btn');
+
+            if(isTradingUnlocked) {
+                buyBtn.classList.remove('disabled-btn');
+                sellBtn.classList.remove('disabled-btn');
+                warningMsg.classList.add('hidden');
+                triggerBtn.innerHTML = `<i class="fa-solid fa-circle-check text-green-400"></i> Active Status`;
+                triggerBtn.classList.replace('from-yellow-600', 'from-emerald-950');
+                triggerBtn.classList.replace('to-yellow-500', 'to-slate-900');
+                triggerBtn.style.color = "#00ff88";
+                triggerBtn.style.pointerEvents = "none";
+            } else {
+                buyBtn.classList.add('disabled-btn');
+                sellBtn.classList.add('disabled-btn');
+                warningMsg.classList.remove('hidden');
+            }
+        }
+
+        // Verify Secret Authorization Passcodes
+        function verifyActivationCode() {
+            const codeField = document.getElementById('activation-code-input');
+            if(codeField.value === MASTER_PASSCODE) {
+                isTradingUnlocked = true;
+                
+                // Save database parameters
+                let currentData = JSON.parse(localStorage.getItem(`user_${currentUser}`));
+                currentData.tradingUnlocked = true;
+                localStorage.setItem(`user_${currentUser}`, JSON.stringify(currentData));
+
+                alert("🎉 Activation Successful! Trading channels are now online and fully responsive.");
+                dismissModalView('activation-modal');
+                syncTradingLockState();
+            } else {
+                alert("❌ Authentication Error: Invalid secret authorization passcode input.");
+            }
+        }
+
+        // Copy Clipboard Helpers Engine
+        function copyTRC20Address() {
+            const textToCopy = document.getElementById('crypto-address-text').innerText;
+            navigator.clipboard.writeText(textToCopy);
+            alert("TRC20 address successfully copied to clipboard!");
+        }
+
+        // User Sign-In / Account Authentication Controllers
+        function toggleAuthMode() {
+            isSignUpMode = !isSignUpMode;
+            document.getEleme
